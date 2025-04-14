@@ -1,0 +1,7 @@
+saves/
+data/
+cache/
+__pycache__/
+.ipynb_checkpoints/
+*.svg
+*.pth
