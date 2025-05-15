@@ -130,18 +130,15 @@ class DownBlocks(nn.Module):
         batch_size = x.size(0)
         num_bins = x.size(-1)
         if x.dim()==2:
-        #assert (x.shape)==(batch_size, num_bins)
-            x=x.unsqueeze(2).permute(1,2,0) # num_bins, 1, batch_size
-        elif x.dim()==3:
-            x=x.permute(2,1,0)
-        else:
+            #assert (x.shape)==(batch_size, num_bins)
+            x=x.unsqueeze(2).permute(0,2,1) # batch_size, 1, num_bins
+        elif x.dim()!=3:
             raise Exception(f"unknown!! {x.shape}")
         smear = self.gs(
             torch.linspace(0,1, num_bins).to(self.gs.offset.device)
         ).unsqueeze(1)
-        smear=smear.broadcast_to(num_bins, batch_size, -1).permute(0, 2, 1)
-        #print("    UNet:cat", x.shape, smear.shape)
-        informed_x = torch.cat((x, smear), -2).permute(2,1,0) # batch_size, 1+G, num_bins
+        smear=smear.broadcast_to(num_bins, batch_size, -1).permute(1, 2, 0)#.permute(0, 2, 1)
+        informed_x = torch.cat((x, smear), -2)#.permute(2,1,0) # batch_size, 1+G, num_bins
         if self.return_samples:
             res = [informed_x]
             for down in self.downs:

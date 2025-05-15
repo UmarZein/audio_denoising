@@ -106,6 +106,14 @@ def get_random_audio_buffer(filename, buffer_size, use_torch=True):
     sample_rate = (cache_entry['sample_rate'])
     ptr = np.random.randint(0,n_samples-buffer_size)
     sample = (cache_entry['samples'])[...,ptr:ptr+buffer_size]
+    if 'int8' in str(sample.dtype):
+        sample=sample.astype('float32')/128.0
+    if 'int16' in str(sample.dtype):
+        sample=sample.astype('float32')/32768.0
+    if 'int32' in str(sample.dtype):
+        sample=sample.astype('float32')/2147483648.0
+    if 'int64' in str(sample.dtype):
+        sample=sample.astype('float32')/9223372036854775808.0
     if use_torch:
         return torch.tensor(sample), sample_rate
     return (sample), sample_rate
@@ -131,6 +139,14 @@ def read_audio(file_path, max_samples=2<<63, use_tensor=True):
         if n_samples>max_samples:
             break
     samples = np.concatenate(samples,axis=-1)[..., :max_samples]
+    if 'int8' in str(samples.dtype):
+        samples=samples.astype('float32')/128.0
+    if 'int16' in str(samples.dtype):
+        samples=samples.astype('float32')/32768.0
+    if 'int32' in str(samples.dtype):
+        samples=samples.astype('float32')/2147483648.0
+    if 'int64' in str(samples.dtype):
+        samples=samples.astype('float32')/9223372036854775808.0
     if use_tensor:
         samples=torch.tensor(samples)
     return samples, frame.sample_rate
@@ -224,6 +240,14 @@ def __stream_audio(file_path, use_torch=True, discard_first=False, use_cache=Tru
                 is_first=False
                 continue
             samples = entry["samples"][...,i:i+entry["frame_size"]]
+            if 'int8' in str(samples.dtype):
+                samples=samples.astype('float32')/128.0
+            if 'int16' in str(samples.dtype):
+                samples=samples.astype('float32')/32768.0
+            if 'int32' in str(samples.dtype):
+                samples=samples.astype('float32')/2147483648.0
+            if 'int64' in str(samples.dtype):
+                samples=samples.astype('float32')/9223372036854775808.0
             #print("__stream_audio: samples:",samples.shape)
             if use_torch:
                 _samples=torch.tensor(samples.copy())
@@ -249,6 +273,14 @@ def __stream_audio(file_path, use_torch=True, discard_first=False, use_cache=Tru
                 print("__stream_audio: discarding first entry")
                 is_first=False
                 continue
+            if 'int8' in str(_samples.dtype):
+                _samples=_samples.astype('float32')/128.0
+            if 'int16' in str(_samples.dtype):
+                _samples=_samples.astype('float32')/32768.0
+            if 'int32' in str(_samples.dtype):
+                _samples=_samples.astype('float32')/2147483648.0
+            if 'int64' in str(_samples.dtype):
+                _samples=_samples.astype('float32')/9223372036854775808.0
             if use_torch:
                 _samples=torch.tensor(_samples)
             sample_rate=frame.sample_rate
@@ -256,10 +288,11 @@ def __stream_audio(file_path, use_torch=True, discard_first=False, use_cache=Tru
             yield _samples, sample_rate
         if use_cache:
             #print("__stream_audio: saving cache to", __file_path)
+            __to_save = np.concatenate(to_save,-1)
             AUDIO_CACHE[__file_path]={
                 "sample_rate":sample_rate,
                 "frame_size":n_samples//n_frames,
-                "samples":np.concatenate(to_save,-1),
+                "samples":__to_save,
                 "num_samples":n_samples
             }
 
